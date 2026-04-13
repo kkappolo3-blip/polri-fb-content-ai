@@ -18,17 +18,80 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const poseDescriptions: Record<string, string> = {
-      melarang: "A heroic Indonesian police officer in full uniform standing firmly with one hand raised in a STOP gesture, serious expression, dramatic red and blue lighting, professional photography style",
-      humanis: "A friendly smiling Indonesian police officer in uniform waving warmly to the community, warm golden lighting, approachable and trustworthy, professional photography style",
-      religius: "An Indonesian police officer in uniform with hands together in prayer position, peaceful expression, soft green and golden lighting, respectful and spiritual atmosphere, professional photography",
-      himbauan: "A wise Indonesian police officer in uniform pointing forward giving advice, confident expression, professional blue and amber lighting, authoritative yet approachable, professional photography",
+    // Step 1: Generate text content using AI
+    const styleDescriptions: Record<string, string> = {
+      melarang: "tegas, serius, peringatan keras, gaya larangan/pencegahan",
+      humanis: "hangat, ramah, empati, penuh perhatian, motivasi positif, gaya humanis",
+      religius: "bijak, spiritual, penuh hikmah, mengajak refleksi, gaya religius",
+      himbauan: "edukatif, mengingatkan, persuasif, gaya himbauan kepolisian",
     };
 
-    const poseDesc = poseDescriptions[poseStyle] || poseDescriptions.melarang;
-    const prompt = `Create a high-quality poster background image for Indonesian National Police (POLRI) social media content. Theme: ${tema || "public safety"}. Style: ${poseDesc}. The image should be vertical (portrait), cinematic quality, modern design with dramatic lighting. No text in the image. High resolution, photorealistic.`;
+    const styleDesc = styleDescriptions[poseStyle] || styleDescriptions.humanis;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const textPrompt = `Kamu adalah kreator konten media sosial untuk anggota Polri (Kepolisian Republik Indonesia). 
+Buatkan teks konten poster untuk Facebook dengan gaya: ${styleDesc}.
+Tema: ${tema || "kepolisian dan masyarakat"}.
+
+PENTING: Buat teks yang HIDUP, ENERGIK, dan RELEVAN seperti konten viral polisi di Facebook. 
+Bukan seperti berita kematian atau duka cita!
+Gunakan bahasa Indonesia yang mengalir, bisa lucu, bijak, atau tegas sesuai gaya.
+
+Format jawaban HARUS tepat seperti ini (tanpa tambahan apapun):
+HEADER: [judul besar 3-6 kata, HURUF BESAR, impactful]
+PESAN: [pesan utama 2-4 kalimat, mengalir dan powerful]
+TAMBAHAN: [1 kalimat penutup/call-to-action singkat]`;
+
+    const textResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [{ role: "user", content: textPrompt }],
+      }),
+    });
+
+    let headerText = "";
+    let pesanUtama = "";
+    let pesanTambahan = "";
+
+    if (textResponse.ok) {
+      const textData = await textResponse.json();
+      const rawText = textData.choices?.[0]?.message?.content || "";
+      console.log("AI text response:", rawText);
+
+      const headerMatch = rawText.match(/HEADER:\s*(.+)/i);
+      const pesanMatch = rawText.match(/PESAN:\s*(.+)/i);
+      const tambahanMatch = rawText.match(/TAMBAHAN:\s*(.+)/i);
+
+      headerText = headerMatch?.[1]?.trim() || "POLRI HADIR UNTUK ANDA";
+      pesanUtama = pesanMatch?.[1]?.trim() || "Keamanan dan ketertiban adalah tanggung jawab kita bersama.";
+      pesanTambahan = tambahanMatch?.[1]?.trim() || "Hubungi 110 untuk bantuan.";
+    } else {
+      console.error("Text generation failed:", textResponse.status);
+      headerText = "POLRI HADIR UNTUK ANDA";
+      pesanUtama = "Keamanan dan ketertiban adalah tanggung jawab kita bersama.";
+      pesanTambahan = "Hubungi 110 untuk bantuan.";
+    }
+
+    // Step 2: Generate background scene (NO person, just scenery/atmosphere)
+    const sceneDescriptions: Record<string, string> = {
+      melarang: "dramatic dark moody background with red and blue police lights, urban city street at night, cinematic atmosphere, NO people, NO text",
+      humanis: "warm golden hour village scene, Indonesian rural community setting, friendly warm atmosphere, beautiful sunset light, NO people, NO text",
+      religius: "peaceful mosque or spiritual setting with golden light rays, serene atmosphere, bokeh lights, warm tones, NO people, NO text",
+      himbauan: "professional modern Indonesian cityscape, clean blue sky, official government building or road scene, NO people, NO text",
+    };
+
+    const sceneDesc = sceneDescriptions[poseStyle] || sceneDescriptions.humanis;
+    const bgPrompt = `Create a vertical portrait background image (NO people, NO text, NO faces). 
+Scene: ${sceneDesc}. 
+Theme context: ${tema || "Indonesian police community service"}.
+Style: Cinematic, dramatic lighting, high quality, photorealistic, suitable as poster background.
+The image must have NO humans, NO officers, NO text - ONLY scenic/atmospheric background.`;
+
+    const imageResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
@@ -36,43 +99,38 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash-image",
-        messages: [{ role: "user", content: prompt }],
+        messages: [{ role: "user", content: bgPrompt }],
         modalities: ["image", "text"],
       }),
     });
 
-    if (!response.ok) {
-      if (response.status === 429) {
+    let imageUrl = null;
+
+    if (imageResponse.ok) {
+      const imgData = await imageResponse.json();
+      imageUrl = imgData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    } else {
+      if (imageResponse.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
           status: 429,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      if (response.status === 402) {
+      if (imageResponse.status === 402) {
         return new Response(JSON.stringify({ error: "Credits exhausted. Please add funds." }), {
           status: 402,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      const text = await response.text();
-      console.error("AI gateway error:", response.status, text);
-      return new Response(JSON.stringify({ error: "AI generation failed" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      console.error("Image generation failed:", imageResponse.status);
     }
 
-    const data = await response.json();
-    const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-
-    if (!imageUrl) {
-      return new Response(JSON.stringify({ error: "No image generated" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    return new Response(JSON.stringify({ imageUrl }), {
+    return new Response(JSON.stringify({ 
+      imageUrl, 
+      headerText, 
+      pesanUtama, 
+      pesanTambahan 
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
