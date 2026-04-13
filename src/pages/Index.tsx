@@ -21,50 +21,57 @@ const Index = () => {
 
   const [content, setContent] = useState<ContentData>({
     tema: "",
-    caption: "",
-    poseStyle: "melarang",
+    poseStyle: "humanis",
+  });
+
+  // AI-generated text
+  const [aiText, setAiText] = useState({
     headerText: "",
     pesanUtama: "",
     pesanTambahan: "",
   });
 
   const handleGenerate = async () => {
-    if (!content.headerText) {
-      toast.error("Masukkan header teks terlebih dahulu!");
+    if (!content.tema) {
+      toast.error("Masukkan tema konten terlebih dahulu!");
       return;
     }
 
     setIsLoadingAI(true);
     setGenerated(false);
     setAiBackground(null);
+    setAiText({ headerText: "", pesanUtama: "", pesanTambahan: "" });
 
     try {
       const { data, error } = await supabase.functions.invoke("generate-poster", {
-        body: { poseStyle: content.poseStyle, tema: content.tema || content.headerText },
+        body: { poseStyle: content.poseStyle, tema: content.tema },
       });
 
       if (error) {
         console.error("Edge function error:", error);
-        toast.error("Gagal generate gambar AI. Menggunakan background default.");
-        setAiBackground(null);
+        toast.error("Gagal generate konten. Coba lagi.");
       } else if (data?.error) {
         console.error("AI error:", data.error);
         toast.error(data.error);
-        setAiBackground(null);
-      } else if (data?.imageUrl) {
-        setAiBackground(data.imageUrl);
-        toast.success("Background AI berhasil di-generate! 🎨");
+      } else {
+        if (data?.imageUrl) {
+          setAiBackground(data.imageUrl);
+        }
+        setAiText({
+          headerText: data?.headerText || "POLRI HADIR UNTUK ANDA",
+          pesanUtama: data?.pesanUtama || "",
+          pesanTambahan: data?.pesanTambahan || "",
+        });
+        toast.success("Konten AI berhasil di-generate! 🎨");
       }
     } catch (err) {
       console.error("Generate error:", err);
-      toast.error("Terjadi kesalahan. Menggunakan background default.");
-      setAiBackground(null);
+      toast.error("Terjadi kesalahan. Coba lagi.");
     }
 
     setGenerated(true);
     setIsLoadingAI(false);
     setContentCount((c) => c + 1);
-    toast.success("Konten berhasil di-generate! 🎉");
   };
 
   return (
@@ -94,9 +101,9 @@ const Index = () => {
             profileName={profile.name}
             profileJabatan={profile.jabatan}
             profileUnit={profile.unit}
-            headerText={content.headerText}
-            pesanUtama={content.pesanUtama}
-            pesanTambahan={content.pesanTambahan}
+            headerText={aiText.headerText}
+            pesanUtama={aiText.pesanUtama}
+            pesanTambahan={aiText.pesanTambahan}
             poseStyle={content.poseStyle}
             generated={generated}
             aiBackground={aiBackground}

@@ -16,9 +16,9 @@ interface CanvasPreviewProps {
 }
 
 const W = 1080;
-const H = 1440;
+const H = 1350;
 
-function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
+function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number, lineHeight: number): string[] {
   const words = text.split(" ");
   const lines: string[] = [];
   let current = "";
@@ -33,20 +33,6 @@ function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number)
   }
   if (current) lines.push(current);
   return lines;
-}
-
-function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
 }
 
 const CanvasPreview = ({
@@ -64,7 +50,7 @@ const CanvasPreview = ({
 
     ctx.clearRect(0, 0, W, H);
 
-    // Background
+    // === BACKGROUND ===
     if (bgImg) {
       const scale = Math.max(W / bgImg.width, H / bgImg.height);
       const bw = bgImg.width * scale;
@@ -72,154 +58,142 @@ const CanvasPreview = ({
       ctx.drawImage(bgImg, (W - bw) / 2, (H - bh) / 2, bw, bh);
     } else {
       const bgGrad = ctx.createLinearGradient(0, 0, W, H);
-      bgGrad.addColorStop(0, "#1a365d");
-      bgGrad.addColorStop(0.5, "#2d4a7a");
-      bgGrad.addColorStop(1, "#1a365d");
+      bgGrad.addColorStop(0, "#1a1a2e");
+      bgGrad.addColorStop(0.5, "#16213e");
+      bgGrad.addColorStop(1, "#0f3460");
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, W, H);
     }
 
-    // Overlays
-    const leftW = W * 0.45;
-    const leftGrad = ctx.createLinearGradient(0, 0, leftW + 80, 0);
-    leftGrad.addColorStop(0, "rgba(0,0,0,0.5)");
-    leftGrad.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.fillStyle = leftGrad;
-    ctx.fillRect(0, 0, leftW + 80, H);
+    // === PROFILE PHOTO (large, right side, like references) ===
+    if (profileImg) {
+      // Draw photo on right side, from middle to bottom
+      const photoW = W * 0.65;
+      const photoH = H * 0.75;
+      const photoX = W - photoW + 40;
+      const photoY = H - photoH;
 
-    const rightGrad = ctx.createLinearGradient(leftW - 40, 0, W, 0);
-    rightGrad.addColorStop(0, "rgba(0,0,0,0)");
-    rightGrad.addColorStop(0.3, "rgba(0,0,0,0.55)");
-    rightGrad.addColorStop(1, "rgba(0,0,0,0.7)");
-    ctx.fillStyle = rightGrad;
-    ctx.fillRect(leftW - 40, 0, W - leftW + 40, H);
+      // Save and create clipping for smooth edges
+      ctx.save();
+      ctx.drawImage(profileImg, photoX, photoY, photoW, photoH);
+      ctx.restore();
 
-    const topGrad = ctx.createLinearGradient(0, 0, 0, 180);
-    topGrad.addColorStop(0, "rgba(0,0,0,0.6)");
+      // Gradient overlay from left to blend text area
+      const leftBlend = ctx.createLinearGradient(0, 0, W * 0.55, 0);
+      leftBlend.addColorStop(0, "rgba(0,0,0,0.85)");
+      leftBlend.addColorStop(0.6, "rgba(0,0,0,0.6)");
+      leftBlend.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = leftBlend;
+      ctx.fillRect(0, 0, W, H);
+    } else {
+      // Full dark overlay when no photo
+      ctx.fillStyle = "rgba(0,0,0,0.5)";
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    // Top gradient for header readability
+    const topGrad = ctx.createLinearGradient(0, 0, 0, 350);
+    topGrad.addColorStop(0, "rgba(0,0,0,0.8)");
     topGrad.addColorStop(1, "rgba(0,0,0,0)");
     ctx.fillStyle = topGrad;
-    ctx.fillRect(0, 0, W, 180);
+    ctx.fillRect(0, 0, W, 350);
 
-    const botGrad = ctx.createLinearGradient(0, H - 200, 0, H);
+    // Bottom gradient for name area
+    const botGrad = ctx.createLinearGradient(0, H - 350, 0, H);
     botGrad.addColorStop(0, "rgba(0,0,0,0)");
-    botGrad.addColorStop(1, "rgba(0,0,0,0.7)");
+    botGrad.addColorStop(0.5, "rgba(0,0,0,0.7)");
+    botGrad.addColorStop(1, "rgba(0,0,0,0.95)");
     ctx.fillStyle = botGrad;
-    ctx.fillRect(0, H - 200, W, 200);
+    ctx.fillRect(0, H - 350, W, 350);
 
-    // Corner accents
-    ctx.strokeStyle = "#c9a84c";
-    ctx.lineWidth = 3;
-    const cs = 40, m = 25;
-    ctx.beginPath(); ctx.moveTo(m, m + cs); ctx.lineTo(m, m); ctx.lineTo(m + cs, m); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(W - m - cs, m); ctx.lineTo(W - m, m); ctx.lineTo(W - m, m + cs); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(m, H - m - cs); ctx.lineTo(m, H - m); ctx.lineTo(m + cs, H - m); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(W - m - cs, H - m); ctx.lineTo(W - m, H - m); ctx.lineTo(W - m, H - m - cs); ctx.stroke();
+    // === HEADER TEXT (top area, bold, large) ===
+    if (headerText) {
+      ctx.textAlign = "left";
+      ctx.font = "900 62px 'Arial Black', Impact, sans-serif";
+      ctx.fillStyle = "#ffffff";
+      ctx.shadowColor = "rgba(0,0,0,0.7)";
+      ctx.shadowBlur = 8;
+      ctx.shadowOffsetX = 2;
+      ctx.shadowOffsetY = 2;
 
-    // LEFT: Profile Photo
-    if (profileImg) {
-      const photoSize = 300;
-      const cx = leftW / 2;
-      const cy = H / 2 - 40;
+      const maxW = W * 0.75;
+      const headerLines = wrapText(ctx, headerText.toUpperCase(), maxW, 72);
+      headerLines.forEach((line, i) => {
+        // Highlight key words with gold
+        ctx.fillStyle = i === 1 || headerLines.length === 1 ? "#f5c518" : "#ffffff";
+        ctx.fillText(line, 60, 120 + i * 72);
+      });
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+    }
 
-      ctx.save();
-      ctx.shadowColor = "rgba(201, 168, 76, 0.5)";
-      ctx.shadowBlur = 30;
-      ctx.beginPath();
-      ctx.arc(cx, cy, photoSize / 2 + 6, 0, Math.PI * 2);
-      ctx.strokeStyle = "#c9a84c";
+    // === PESAN UTAMA (middle-left area) ===
+    if (pesanUtama) {
+      ctx.textAlign = "left";
+      ctx.font = "600 28px Arial, sans-serif";
+      ctx.shadowColor = "rgba(0,0,0,0.8)";
+      ctx.shadowBlur = 6;
+
+      const maxW = W * 0.55;
+      const msgLines = wrapText(ctx, pesanUtama, maxW, 38);
+      const startY = 380;
+      msgLines.forEach((line, i) => {
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText(line, 60, startY + i * 38);
+      });
+
+      ctx.shadowBlur = 0;
+    }
+
+    // === PESAN TAMBAHAN ===
+    if (pesanTambahan) {
+      ctx.textAlign = "left";
+      ctx.font = "bold 30px Arial, sans-serif";
+      ctx.fillStyle = "#f5c518";
+      ctx.shadowColor = "rgba(0,0,0,0.8)";
+      ctx.shadowBlur = 6;
+
+      const maxW = W * 0.6;
+      const lines = wrapText(ctx, pesanTambahan, maxW, 38);
+      const startY = pesanUtama ? 560 : 400;
+      lines.forEach((line, i) => {
+        ctx.fillText(line, 60, startY + i * 38);
+      });
+
+      ctx.shadowBlur = 0;
+    }
+
+    // === BOTTOM: Name, Rank, Unit (centered) ===
+    if (profileName || profileJabatan || profileUnit) {
+      // Gold divider line
+      ctx.strokeStyle = "#f5c518";
       ctx.lineWidth = 3;
-      ctx.stroke();
-      ctx.restore();
-
-      ctx.save();
       ctx.beginPath();
-      ctx.arc(cx, cy, photoSize / 2, 0, Math.PI * 2);
-      ctx.clip();
-      const s = Math.min(profileImg.width, profileImg.height);
-      const sx = (profileImg.width - s) / 2;
-      const sy = (profileImg.height - s) / 2;
-      ctx.drawImage(profileImg, sx, sy, s, s, cx - photoSize / 2, cy - photoSize / 2, photoSize, photoSize);
-      ctx.restore();
+      ctx.moveTo(W / 2 - 120, H - 200);
+      ctx.lineTo(W / 2 + 120, H - 200);
+      ctx.stroke();
 
       if (profileName) {
-        ctx.font = "bold 26px Inter, sans-serif";
+        ctx.textAlign = "center";
+        ctx.font = "900 42px 'Arial Black', Impact, sans-serif";
         ctx.fillStyle = "#ffffff";
-        ctx.textAlign = "center";
-        ctx.fillText(profileName, cx, cy + photoSize / 2 + 45);
+        ctx.shadowColor = "rgba(0,0,0,0.8)";
+        ctx.shadowBlur = 6;
+        ctx.fillText(profileName.toUpperCase(), W / 2, H - 140);
+        ctx.shadowBlur = 0;
       }
-      if (profileJabatan) {
-        ctx.font = "500 20px Inter, sans-serif";
-        ctx.fillStyle = "#c9a84c";
+
+      if (profileJabatan || profileUnit) {
         ctx.textAlign = "center";
-        ctx.fillText(profileJabatan, cx, cy + photoSize / 2 + 75);
+        ctx.font = "500 22px Arial, sans-serif";
+        ctx.fillStyle = "#e0e0e0";
+        const subtitle = [profileJabatan, profileUnit].filter(Boolean).join(" — ");
+        ctx.fillText(subtitle, W / 2, H - 100);
       }
-      if (profileUnit) {
-        ctx.font = "400 17px Inter, sans-serif";
-        ctx.fillStyle = "#b0bec5";
-        ctx.textAlign = "center";
-        ctx.fillText(profileUnit, cx, cy + photoSize / 2 + 100);
-      }
-    } else {
-      const cx = leftW / 2;
-      const cy = H / 2;
-      ctx.beginPath();
-      ctx.arc(cx, cy, 110, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(255,255,255,0.05)";
-      ctx.fill();
-      ctx.strokeStyle = "rgba(255,255,255,0.15)";
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      ctx.font = "72px sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText("👤", cx, cy);
     }
 
-    // RIGHT: Text Content
-    const textX = leftW + 50;
-    const textMaxW = W - textX - 50;
-
-    if (headerText) {
-      ctx.font = "bold 52px Inter, sans-serif";
-      ctx.fillStyle = "#ffffff";
-      ctx.textAlign = "left";
-      const headerLines = wrapText(ctx, headerText.toUpperCase(), textMaxW);
-      headerLines.forEach((line, i) => {
-        ctx.fillText(line, textX, 310 + i * 66);
-      });
-      const headerBottom = 310 + headerLines.length * 66 + 8;
-      ctx.fillStyle = "#c9a84c";
-      ctx.fillRect(textX, headerBottom, 70, 3);
-    }
-
-    if (pesanUtama) {
-      ctx.font = "500 28px Inter, sans-serif";
-      ctx.fillStyle = "#e0c97f";
-      ctx.textAlign = "left";
-      const msgLines = wrapText(ctx, pesanUtama, textMaxW);
-      msgLines.forEach((line, i) => {
-        ctx.fillText(line, textX, 550 + i * 40);
-      });
-    }
-
-    if (pesanTambahan) {
-      ctx.font = "400 20px Inter, sans-serif";
-      ctx.fillStyle = "#b0bec5";
-      ctx.textAlign = "left";
-      ctx.fillText(pesanTambahan, textX, 800);
-    }
-
-    // POLRI Badge
-    const badgeY = H - 90;
-    ctx.fillStyle = "#c9a84c";
-    roundRect(ctx, W / 2 - 85, badgeY, 170, 40, 20);
-    ctx.fill();
-    ctx.font = "bold 16px Inter, sans-serif";
-    ctx.fillStyle = "#1a365d";
-    ctx.textAlign = "center";
-    ctx.fillText("⭐ POLRI ⭐", W / 2, badgeY + 26);
-
-  }, [profilePhoto, profileName, profileJabatan, profileUnit, headerText, pesanUtama, pesanTambahan, poseStyle]);
+  }, [headerText, pesanUtama, pesanTambahan, profileName, profileJabatan, profileUnit]);
 
   useEffect(() => {
     if (!generated) return;
@@ -252,15 +226,16 @@ const CanvasPreview = ({
       <div className="relative rounded-lg overflow-hidden border border-border bg-muted/30">
         <canvas ref={canvasRef} width={W} height={H} className="w-full h-auto" />
         {!generated && !isLoadingAI && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/70">
-            <p className="text-muted-foreground text-sm italic">Klik "Generate" untuk membuat konten</p>
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/70 gap-2">
+            <p className="text-muted-foreground text-sm italic">Upload foto profil, isi tema, pilih gaya</p>
+            <p className="text-muted-foreground text-sm italic">lalu klik "Generate Konten AI"</p>
           </div>
         )}
         {isLoadingAI && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/80 gap-3">
             <Loader2 className="w-10 h-10 text-primary animate-spin" />
-            <p className="text-sm text-primary font-medium">AI sedang membuat gambar...</p>
-            <p className="text-xs text-muted-foreground">Proses ini memakan waktu 10-30 detik</p>
+            <p className="text-sm text-primary font-medium">AI sedang membuat konten...</p>
+            <p className="text-xs text-muted-foreground">Membuat teks + background (15-40 detik)</p>
           </div>
         )}
       </div>
