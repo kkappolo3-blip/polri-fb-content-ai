@@ -1,40 +1,41 @@
-import { Shield, Sparkles } from "lucide-react";
+import { Newspaper, Sparkles } from "lucide-react";
 
 interface HeaderProps {
   contentCount: number;
 }
 
 const Header = ({ contentCount }: HeaderProps) => {
-  return (
-    <header className="glass-strong rounded-2xl p-4 md:p-6 mb-6 md:mb-8">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center animate-pulse-glow">
-              <Shield className="w-7 h-7 text-primary-foreground" />
-            </div>
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">
-                FB CONTENT <span className="gradient-text">AI PRO</span>
-              </h1>
-              <span className="px-2 py-0.5 text-[10px] font-bold bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-full uppercase tracking-wider">
-                PRO
-              </span>
-            </div>
-            <p className="text-xs text-muted-foreground">Kreator Konten Visual Premium Polri</p>
-          </div>
-        </div>
+  const today = new Date().toLocaleDateString("id-ID", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 
-        <div className="flex items-center gap-3">
-          <div className="glass rounded-xl px-4 py-2 flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <div>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Konten Dibuat</p>
-              <p className="text-lg font-bold gradient-text leading-tight">{contentCount}</p>
-            </div>
-          </div>
+  return (
+    <header className="mb-6 md:mb-8">
+      <div className="text-center py-4 border-b border-foreground/10">
+        <p className="text-xs text-muted-foreground tracking-widest uppercase mb-2">{today}</p>
+        <div className="newspaper-divider mb-3" />
+        <div className="flex items-center justify-center gap-3">
+          <Newspaper className="w-8 h-8 text-primary" />
+          <h1 className="font-serif-display text-3xl md:text-4xl font-bold tracking-tight text-foreground">
+            FB Content <span className="text-primary">AI Pro</span>
+          </h1>
+          <span className="px-2 py-0.5 text-[10px] font-bold bg-primary text-primary-foreground rounded uppercase tracking-wider">
+            PRO
+          </span>
+        </div>
+        <p className="text-sm text-muted-foreground mt-1 italic">
+          Kreator Konten Visual Premium — Kepolisian Republik Indonesia
+        </p>
+        <div className="newspaper-divider mt-3" />
+      </div>
+
+      <div className="flex justify-center mt-3">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Sparkles className="w-4 h-4 text-accent" />
+          <span>Konten dibuat: <strong className="text-foreground">{contentCount}</strong></span>
         </div>
       </div>
     </header>
