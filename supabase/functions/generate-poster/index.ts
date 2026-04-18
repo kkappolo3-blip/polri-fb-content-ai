@@ -64,19 +64,29 @@ TAMBAHAN: [1 kalimat call-to-action]`;
       pesanTambahan = rawText.match(/TAMBAHAN:\s*(.+)/i)?.[1]?.trim() || pesanTambahan;
     }
 
-    // === STEP 2: AI EDIT user photo - transform style based on theme ===
-    const editStyleMap: Record<string, string> = {
-      melarang: `Transform this person into a CINEMATIC POLICE POSTER style. Keep the EXACT same face, same identity, same person — do NOT change facial features. Dress them in a professional Indonesian Polri (Police) uniform (light brown/khaki shirt with rank insignia). Place them in a dramatic urban night scene with dim red/blue police lights in the background. Pose: serious, authoritative, arms crossed or hand near belt, looking straight ahead with stern expression. Cinematic lighting, sharp focus on face, shallow depth of field, photorealistic editorial poster quality. Vertical portrait composition.`,
-      humanis: `Transform this person into a WARM HUMANIST POLICE POSTER style. Keep the EXACT same face, same identity — do NOT change facial features. Dress them in a friendly Indonesian Polri (Police) uniform (light brown shirt). Place them in a warm Indonesian community/village setting with golden hour sunlight. Pose: smiling warmly, hand on chest or open gesture, friendly approachable expression. Soft warm cinematic lighting, photorealistic, suitable as Facebook poster. Vertical portrait.`,
-      religius: `Transform this person into a SPIRITUAL/RELIGIOUS POLICE POSTER style. Keep the EXACT same face, same identity. Dress them in Indonesian Polri uniform. Place them in a serene setting with soft golden light rays from above, peaceful background. Pose: contemplative, hand on heart or in gentle prayer-like gesture, calm wise expression. Soft divine lighting, photorealistic poster quality. Vertical portrait.`,
-      himbauan: `Transform this person into a PROFESSIONAL OFFICIAL POLICE POSTER style. Keep the EXACT same face, same identity. Dress them in formal Indonesian Polri (Police) uniform with rank insignia. Place them in front of a clean professional setting (Indonesian government building or clean blue background). Pose: confident, hand pointing forward or open palm gesture, persuasive expression. Bright clean lighting, sharp photorealistic poster quality. Vertical portrait.`,
+    // === STEP 2: AI EDIT user photo - keep face/uniform/name tag, ONLY change pose + background ===
+    const poseAndSceneMap: Record<string, string> = {
+      melarang: `Pose: berdiri tegas dan berwibawa, tangan menunjuk ke depan atau bersedekap, ekspresi serius dan tegas seperti memberi peringatan. Background: suasana malam dramatis dengan lampu polisi merah-biru samar di kejauhan, jalan kota Indonesia, pencahayaan sinematik moody.`,
+      humanis: `Pose: berdiri ramah dengan senyum hangat, tangan terbuka mengundang atau di dada, ekspresi penuh empati dan bersahabat. Background: suasana desa/kampung Indonesia yang hangat saat golden hour, cahaya matahari sore lembut, suasana komunitas yang damai.`,
+      religius: `Pose: berdiri tenang dan khidmat, tangan di dada atau gestur menghormat lembut, ekspresi bijak dan penuh refleksi. Background: suasana tenang dengan cahaya keemasan lembut dari atas, latar masjid atau alam yang damai, atmosfer spiritual.`,
+      himbauan: `Pose: berdiri profesional dan percaya diri, tangan terbuka seolah memberi himbauan/edukasi kepada masyarakat, ekspresi meyakinkan. Background: suasana resmi bersih, gedung pemerintahan Indonesia atau langit biru cerah, pencahayaan terang profesional.`,
     };
 
-    const editPrompt = `${editStyleMap[poseStyle] || editStyleMap.humanis}
+    const editPrompt = `Edit foto orang ini untuk poster himbauan Polri tema "${tema}".
 
-Context — the poster will say: "${headerText}". Pose and expression should match this message about "${tema}".
-${profileJabatan ? `The person's rank is ${profileJabatan}.` : ""}
-IMPORTANT: Preserve the person's exact facial identity. Only change clothing, pose, lighting, and background. Do NOT add any text or letters in the image.`;
+ATURAN MUTLAK — JANGAN DILANGGAR:
+- WAJAH orang ini HARUS DIPERTAHANKAN PERSIS SAMA — identitas, fitur wajah, kulit, rambut, kumis/jenggot semuanya identik dengan foto asli. Jangan ubah wajah sedikitpun.
+- SERAGAM POLRI yang dipakai HARUS DIPERTAHANKAN PERSIS — warna, model, kerah, lengan, kancing semuanya sama.
+- NAMA DI DADA / NAMETAG, PANGKAT, LENCANA, EMBLEM, TOPI, dan semua ATRIBUT seragam HARUS DIPERTAHANKAN persis seperti foto asli (jangan ubah teks nametag, jangan ubah lambang).
+- JANGAN tambahkan teks, huruf, logo, atau watermark baru ke gambar.
+
+YANG BOLEH DIUBAH (sesuaikan dengan tema "${tema}"):
+- POSE TUBUH dan posisi tangan: ${poseAndSceneMap[poseStyle] || poseAndSceneMap.humanis}
+- EKSPRESI WAJAH (boleh sedikit disesuaikan agar cocok dengan tema, tapi tetap orang yang sama).
+- BACKGROUND/LATAR di belakang orang.
+- Pencahayaan agar sinematik dan cocok untuk poster Facebook.
+
+Hasil: foto realistis vertikal kualitas tinggi, fotografi editorial, fokus tajam pada orangnya, siap dipakai sebagai poster sosial media Polri.`;
 
     const editResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
