@@ -82,9 +82,10 @@ ATURAN MUTLAK — JANGAN DILANGGAR:
 - NAMETAG di dada, PANGKAT di pundak, LENCANA, EMBLEM, TOPI, dan semua ATRIBUT dipertahankan persis seperti foto asli.
 - JANGAN render teks/huruf/tulisan/logo apapun di dalam gambar (teks akan ditambahkan terpisah di atas).
 
-KOMPOSISI POSTER (PENTING — agar menyatu, bukan tempelan):
-- Orang ditempatkan di BAWAH-TENGAH poster, dari dada/pinggang ke atas wajah, mengisi sekitar setengah bawah poster. WAJAH berada di area tengah-bawah (sekitar 60-75% dari atas), TIDAK di area atas.
-- Bagian ATAS poster (sekitar 30% atas) adalah ruang langit/scene yang lebih lapang dan agak gelap di atas — untuk ruang teks header besar (jangan tulis teksnya).
+KOMPOSISI POSTER (PENTING — agar teks tidak menabrak wajah):
+- Orang ditempatkan di BAGIAN BAWAH poster. Ujung atas KEPALA orang harus berada sekitar 50-55% dari atas poster (artinya seluruh kepala dan wajah berada di SEPARUH BAWAH poster). Jangan letakkan kepala di area atas.
+- Crop dari dada/pinggang ke atas kepala. Bahu mengisi lebar tengah.
+- SELURUH separuh ATAS poster (50% atas) HARUS berupa background/scene SAJA tanpa orang — area kosong yang gelap halus, untuk ruang teks header besar (jangan tulis teksnya).
 - Sisi KIRI di sekitar dada/bahu ada area gelap halus untuk quote kecil (jangan tulis teksnya).
 - Bagian PALING BAWAH ada gradasi gelap untuk nama (jangan tulis namanya).
 - Pencahayaan WAJAH dan TUBUH konsisten dengan BACKGROUND (arah cahaya, warna, bayangan sama) — gunakan rim light, ambient occlusion, color grading menyeluruh. Tepi tubuh menyatu lembut dengan background.
