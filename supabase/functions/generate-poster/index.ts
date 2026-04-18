@@ -83,11 +83,11 @@ ATURAN MUTLAK — JANGAN DILANGGAR:
 - JANGAN render teks/huruf/tulisan/logo apapun di dalam gambar (teks akan ditambahkan terpisah di atas).
 
 KOMPOSISI POSTER (PENTING — agar menyatu, bukan tempelan):
-- Orang ditempatkan di sisi KANAN poster, dari pinggang/dada ke atas, mengisi sekitar 55-65% lebar.
-- Sisi KIRI poster adalah ruang kosong yang menyatu — gradasi gelap ke transparan menuju subjek — untuk ruang teks (jangan tulis teksnya, hanya sediakan ruang gelap halus).
-- Bagian BAWAH ada ruang gelap halus untuk nama (jangan tulis namanya).
-- Pencahayaan WAJAH dan TUBUH harus konsisten dengan pencahayaan BACKGROUND (arah cahaya, warna, bayangan sama) — jangan terlihat seperti cut-out yang ditempel. Gunakan rim light, ambient occlusion, color grading menyeluruh.
-- Tepi tubuh menyatu lembut dengan background (tidak ada outline tajam, tidak ada bayangan kotak).
+- Orang ditempatkan di BAWAH-TENGAH poster, dari dada/pinggang ke atas wajah, mengisi sekitar setengah bawah poster. WAJAH berada di area tengah-bawah (sekitar 60-75% dari atas), TIDAK di area atas.
+- Bagian ATAS poster (sekitar 30% atas) adalah ruang langit/scene yang lebih lapang dan agak gelap di atas — untuk ruang teks header besar (jangan tulis teksnya).
+- Sisi KIRI di sekitar dada/bahu ada area gelap halus untuk quote kecil (jangan tulis teksnya).
+- Bagian PALING BAWAH ada gradasi gelap untuk nama (jangan tulis namanya).
+- Pencahayaan WAJAH dan TUBUH konsisten dengan BACKGROUND (arah cahaya, warna, bayangan sama) — gunakan rim light, ambient occlusion, color grading menyeluruh. Tepi tubuh menyatu lembut dengan background.
 
 POSE & BACKGROUND (sesuai tema "${tema}", gaya ${poseStyle}):
 ${poseAndSceneMap[poseStyle] || poseAndSceneMap.humanis}
