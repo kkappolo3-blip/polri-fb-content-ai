@@ -154,9 +154,8 @@ const CanvasPreview = ({
 
       const maxW = W * 0.45;
       const lines = wrapText(ctx, pesanTambahan, maxW, 34);
-      const headerOffset = headerText ? wrapText(ctx, headerText.toUpperCase(), W * 0.88, 80).length * 80 : 0;
       const pesanOffset = pesanUtama ? wrapText(ctx, `"${pesanUtama}"`, W * 0.42, 30).length * 30 + 30 : 0;
-      const startY = 130 + headerOffset + 40 + pesanOffset + 20;
+      const startY = 90 + headerHeight + 40 + pesanOffset + 20;
       lines.forEach((line, i) => {
         ctx.fillText(line, 50, startY + i * 34);
       });
