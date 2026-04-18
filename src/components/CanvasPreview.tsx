@@ -93,59 +93,61 @@ const CanvasPreview = ({
     ctx.fillStyle = botGrad;
     ctx.fillRect(0, H - 350, W, 350);
 
-    // === HEADER TEXT (top area, bold, large) ===
+    // === HEADER TEXT (top, centered, full width — di ATAS subjek) ===
     if (headerText) {
-      ctx.textAlign = "left";
-      ctx.font = "900 62px 'Arial Black', Impact, sans-serif";
-      ctx.fillStyle = "#ffffff";
-      ctx.shadowColor = "rgba(0,0,0,0.7)";
-      ctx.shadowBlur = 8;
+      ctx.textAlign = "center";
+      ctx.font = "900 72px 'Arial Black', Impact, sans-serif";
+      ctx.shadowColor = "rgba(0,0,0,0.85)";
+      ctx.shadowBlur = 12;
       ctx.shadowOffsetX = 2;
-      ctx.shadowOffsetY = 2;
+      ctx.shadowOffsetY = 3;
 
-      const maxW = W * 0.75;
-      const headerLines = wrapText(ctx, headerText.toUpperCase(), maxW, 72);
+      const maxW = W * 0.88;
+      const headerLines = wrapText(ctx, headerText.toUpperCase(), maxW, 80);
+      const startY = 130;
       headerLines.forEach((line, i) => {
-        // Highlight key words with gold
-        ctx.fillStyle = i === 1 || headerLines.length === 1 ? "#f5c518" : "#ffffff";
-        ctx.fillText(line, 60, 120 + i * 72);
+        ctx.fillStyle = i === headerLines.length - 1 && headerLines.length > 1 ? "#f5c518" : "#ffffff";
+        ctx.fillText(line, W / 2, startY + i * 80);
       });
       ctx.shadowBlur = 0;
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 0;
     }
 
-    // === PESAN UTAMA (middle-left area) ===
+    // === PESAN UTAMA (kiri-tengah, kecil, italic — seperti quote) ===
     if (pesanUtama) {
       ctx.textAlign = "left";
-      ctx.font = "600 28px Arial, sans-serif";
-      ctx.shadowColor = "rgba(0,0,0,0.8)";
+      ctx.font = "italic 22px Arial, sans-serif";
+      ctx.shadowColor = "rgba(0,0,0,0.9)";
       ctx.shadowBlur = 6;
 
-      const maxW = W * 0.55;
-      const msgLines = wrapText(ctx, pesanUtama, maxW, 38);
-      const startY = 380;
+      const headerOffset = headerText ? wrapText(ctx, headerText.toUpperCase(), W * 0.88, 80).length * 80 : 0;
+      const maxW = W * 0.42;
+      const msgLines = wrapText(ctx, `"${pesanUtama}"`, maxW, 30);
+      const startY = 130 + headerOffset + 40;
       msgLines.forEach((line, i) => {
-        ctx.fillStyle = "#ffffff";
-        ctx.fillText(line, 60, startY + i * 38);
+        ctx.fillStyle = "#f0f0f0";
+        ctx.fillText(line, 50, startY + i * 30);
       });
 
       ctx.shadowBlur = 0;
     }
 
-    // === PESAN TAMBAHAN ===
+    // === PESAN TAMBAHAN (kiri, di bawah pesan utama) ===
     if (pesanTambahan) {
       ctx.textAlign = "left";
-      ctx.font = "bold 30px Arial, sans-serif";
+      ctx.font = "bold 26px Arial, sans-serif";
       ctx.fillStyle = "#f5c518";
-      ctx.shadowColor = "rgba(0,0,0,0.8)";
+      ctx.shadowColor = "rgba(0,0,0,0.9)";
       ctx.shadowBlur = 6;
 
-      const maxW = W * 0.6;
-      const lines = wrapText(ctx, pesanTambahan, maxW, 38);
-      const startY = pesanUtama ? 560 : 400;
+      const maxW = W * 0.45;
+      const lines = wrapText(ctx, pesanTambahan, maxW, 34);
+      const headerOffset = headerText ? wrapText(ctx, headerText.toUpperCase(), W * 0.88, 80).length * 80 : 0;
+      const pesanOffset = pesanUtama ? wrapText(ctx, `"${pesanUtama}"`, W * 0.42, 30).length * 30 + 30 : 0;
+      const startY = 130 + headerOffset + 40 + pesanOffset + 20;
       lines.forEach((line, i) => {
-        ctx.fillText(line, 60, startY + i * 38);
+        ctx.fillText(line, 50, startY + i * 34);
       });
 
       ctx.shadowBlur = 0;
