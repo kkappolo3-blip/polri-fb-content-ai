@@ -72,21 +72,27 @@ TAMBAHAN: [1 kalimat call-to-action]`;
       himbauan: `Pose: berdiri profesional dan percaya diri, tangan terbuka seolah memberi himbauan/edukasi kepada masyarakat, ekspresi meyakinkan. Background: suasana resmi bersih, gedung pemerintahan Indonesia atau langit biru cerah, pencahayaan terang profesional.`,
     };
 
-    const editPrompt = `Edit foto orang ini untuk poster himbauan Polri tema "${tema}".
+    const editPrompt = `Buat POSTER UTUH siap publikasi Facebook (rasio vertikal 4:5) untuk himbauan Polri dengan tema "${tema}".
+
+Gunakan orang di foto ini sebagai subjek utama poster.
 
 ATURAN MUTLAK — JANGAN DILANGGAR:
-- WAJAH orang ini HARUS DIPERTAHANKAN PERSIS SAMA — identitas, fitur wajah, kulit, rambut, kumis/jenggot semuanya identik dengan foto asli. Jangan ubah wajah sedikitpun.
-- SERAGAM POLRI yang dipakai HARUS DIPERTAHANKAN PERSIS — warna, model, kerah, lengan, kancing semuanya sama.
-- NAMA DI DADA / NAMETAG, PANGKAT, LENCANA, EMBLEM, TOPI, dan semua ATRIBUT seragam HARUS DIPERTAHANKAN persis seperti foto asli (jangan ubah teks nametag, jangan ubah lambang).
-- JANGAN tambahkan teks, huruf, logo, atau watermark baru ke gambar.
+- WAJAH orang HARUS PERSIS SAMA dengan foto asli — identitas, fitur wajah, kulit, rambut, kumis/jenggot identik. Jangan ubah wajah.
+- SERAGAM POLRI dipertahankan persis — warna, model, kerah, lengan, kancing.
+- NAMETAG di dada, PANGKAT di pundak, LENCANA, EMBLEM, TOPI, dan semua ATRIBUT dipertahankan persis seperti foto asli.
+- JANGAN render teks/huruf/tulisan/logo apapun di dalam gambar (teks akan ditambahkan terpisah di atas).
 
-YANG BOLEH DIUBAH (sesuaikan dengan tema "${tema}"):
-- POSE TUBUH dan posisi tangan: ${poseAndSceneMap[poseStyle] || poseAndSceneMap.humanis}
-- EKSPRESI WAJAH (boleh sedikit disesuaikan agar cocok dengan tema, tapi tetap orang yang sama).
-- BACKGROUND/LATAR di belakang orang.
-- Pencahayaan agar sinematik dan cocok untuk poster Facebook.
+KOMPOSISI POSTER (PENTING — agar menyatu, bukan tempelan):
+- Orang ditempatkan di sisi KANAN poster, dari pinggang/dada ke atas, mengisi sekitar 55-65% lebar.
+- Sisi KIRI poster adalah ruang kosong yang menyatu — gradasi gelap ke transparan menuju subjek — untuk ruang teks (jangan tulis teksnya, hanya sediakan ruang gelap halus).
+- Bagian BAWAH ada ruang gelap halus untuk nama (jangan tulis namanya).
+- Pencahayaan WAJAH dan TUBUH harus konsisten dengan pencahayaan BACKGROUND (arah cahaya, warna, bayangan sama) — jangan terlihat seperti cut-out yang ditempel. Gunakan rim light, ambient occlusion, color grading menyeluruh.
+- Tepi tubuh menyatu lembut dengan background (tidak ada outline tajam, tidak ada bayangan kotak).
 
-Hasil: foto realistis vertikal kualitas tinggi, fotografi editorial, fokus tajam pada orangnya, siap dipakai sebagai poster sosial media Polri.`;
+POSE & BACKGROUND (sesuai tema "${tema}", gaya ${poseStyle}):
+${poseAndSceneMap[poseStyle] || poseAndSceneMap.humanis}
+
+Hasil akhir: satu poster fotografis sinematik realistis kualitas profesional, color graded, depth of field, seperti hasil shooting studio + compositing desainer pro — BUKAN foto ditempel.`;
 
     const editResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
