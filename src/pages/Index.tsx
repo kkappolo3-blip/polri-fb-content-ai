@@ -10,7 +10,7 @@ const Index = () => {
   const [contentCount, setContentCount] = useState(0);
   const [generated, setGenerated] = useState(false);
   const [isLoadingAI, setIsLoadingAI] = useState(false);
-  const [aiBackground, setAiBackground] = useState<string | null>(null);
+  const [editedPhoto, setEditedPhoto] = useState<string | null>(null);
 
   const [profile, setProfile] = useState({
     photo: null as string | null,

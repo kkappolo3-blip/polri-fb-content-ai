@@ -11,125 +11,115 @@ serve(async (req) => {
   }
 
   try {
-    const { poseStyle, tema } = await req.json();
+    const { poseStyle, tema, profilePhoto, profileName, profileJabatan, profileUnit } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    // Step 1: Generate text content using AI
+    if (!profilePhoto) {
+      return new Response(JSON.stringify({ error: "Foto profil wajib di-upload!" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // === STEP 1: Generate text content ===
     const styleDescriptions: Record<string, string> = {
       melarang: "tegas, serius, peringatan keras, gaya larangan/pencegahan",
       humanis: "hangat, ramah, empati, penuh perhatian, motivasi positif, gaya humanis",
       religius: "bijak, spiritual, penuh hikmah, mengajak refleksi, gaya religius",
       himbauan: "edukatif, mengingatkan, persuasif, gaya himbauan kepolisian",
     };
-
     const styleDesc = styleDescriptions[poseStyle] || styleDescriptions.humanis;
 
-    const textPrompt = `Kamu adalah kreator konten media sosial untuk anggota Polri (Kepolisian Republik Indonesia). 
-Buatkan teks konten poster untuk Facebook dengan gaya: ${styleDesc}.
-Tema: ${tema || "kepolisian dan masyarakat"}.
+    const textPrompt = `Kamu kreator konten media sosial Polri. Buat teks poster Facebook gaya: ${styleDesc}. Tema: ${tema || "kepolisian"}.
+Buat HIDUP, ENERGIK, viral. Bukan duka cita.
 
-PENTING: Buat teks yang HIDUP, ENERGIK, dan RELEVAN seperti konten viral polisi di Facebook. 
-Bukan seperti berita kematian atau duka cita!
-Gunakan bahasa Indonesia yang mengalir, bisa lucu, bijak, atau tegas sesuai gaya.
-
-Format jawaban HARUS tepat seperti ini (tanpa tambahan apapun):
-HEADER: [judul besar 3-6 kata, HURUF BESAR, impactful]
-PESAN: [pesan utama 2-4 kalimat, mengalir dan powerful]
-TAMBAHAN: [1 kalimat penutup/call-to-action singkat]`;
+Format WAJIB:
+HEADER: [judul 3-6 kata HURUF BESAR impactful]
+PESAN: [pesan utama 2-3 kalimat powerful]
+TAMBAHAN: [1 kalimat call-to-action]`;
 
     const textResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [{ role: "user", content: textPrompt }],
       }),
     });
 
-    let headerText = "";
-    let pesanUtama = "";
-    let pesanTambahan = "";
+    let headerText = "POLRI HADIR UNTUK ANDA";
+    let pesanUtama = "Keamanan tanggung jawab kita bersama.";
+    let pesanTambahan = "Hubungi 110 untuk bantuan.";
 
     if (textResponse.ok) {
       const textData = await textResponse.json();
       const rawText = textData.choices?.[0]?.message?.content || "";
-      console.log("AI text response:", rawText);
-
-      const headerMatch = rawText.match(/HEADER:\s*(.+)/i);
-      const pesanMatch = rawText.match(/PESAN:\s*(.+)/i);
-      const tambahanMatch = rawText.match(/TAMBAHAN:\s*(.+)/i);
-
-      headerText = headerMatch?.[1]?.trim() || "POLRI HADIR UNTUK ANDA";
-      pesanUtama = pesanMatch?.[1]?.trim() || "Keamanan dan ketertiban adalah tanggung jawab kita bersama.";
-      pesanTambahan = tambahanMatch?.[1]?.trim() || "Hubungi 110 untuk bantuan.";
-    } else {
-      console.error("Text generation failed:", textResponse.status);
-      headerText = "POLRI HADIR UNTUK ANDA";
-      pesanUtama = "Keamanan dan ketertiban adalah tanggung jawab kita bersama.";
-      pesanTambahan = "Hubungi 110 untuk bantuan.";
+      console.log("AI text:", rawText);
+      headerText = rawText.match(/HEADER:\s*(.+)/i)?.[1]?.trim() || headerText;
+      pesanUtama = rawText.match(/PESAN:\s*(.+)/i)?.[1]?.trim() || pesanUtama;
+      pesanTambahan = rawText.match(/TAMBAHAN:\s*(.+)/i)?.[1]?.trim() || pesanTambahan;
     }
 
-    // Step 2: Generate background scene (NO person, just scenery/atmosphere)
-    const sceneDescriptions: Record<string, string> = {
-      melarang: "dramatic dark moody background with red and blue police lights, urban city street at night, cinematic atmosphere, NO people, NO text",
-      humanis: "warm golden hour village scene, Indonesian rural community setting, friendly warm atmosphere, beautiful sunset light, NO people, NO text",
-      religius: "peaceful mosque or spiritual setting with golden light rays, serene atmosphere, bokeh lights, warm tones, NO people, NO text",
-      himbauan: "professional modern Indonesian cityscape, clean blue sky, official government building or road scene, NO people, NO text",
+    // === STEP 2: AI EDIT user photo - transform style based on theme ===
+    const editStyleMap: Record<string, string> = {
+      melarang: `Transform this person into a CINEMATIC POLICE POSTER style. Keep the EXACT same face, same identity, same person — do NOT change facial features. Dress them in a professional Indonesian Polri (Police) uniform (light brown/khaki shirt with rank insignia). Place them in a dramatic urban night scene with dim red/blue police lights in the background. Pose: serious, authoritative, arms crossed or hand near belt, looking straight ahead with stern expression. Cinematic lighting, sharp focus on face, shallow depth of field, photorealistic editorial poster quality. Vertical portrait composition.`,
+      humanis: `Transform this person into a WARM HUMANIST POLICE POSTER style. Keep the EXACT same face, same identity — do NOT change facial features. Dress them in a friendly Indonesian Polri (Police) uniform (light brown shirt). Place them in a warm Indonesian community/village setting with golden hour sunlight. Pose: smiling warmly, hand on chest or open gesture, friendly approachable expression. Soft warm cinematic lighting, photorealistic, suitable as Facebook poster. Vertical portrait.`,
+      religius: `Transform this person into a SPIRITUAL/RELIGIOUS POLICE POSTER style. Keep the EXACT same face, same identity. Dress them in Indonesian Polri uniform. Place them in a serene setting with soft golden light rays from above, peaceful background. Pose: contemplative, hand on heart or in gentle prayer-like gesture, calm wise expression. Soft divine lighting, photorealistic poster quality. Vertical portrait.`,
+      himbauan: `Transform this person into a PROFESSIONAL OFFICIAL POLICE POSTER style. Keep the EXACT same face, same identity. Dress them in formal Indonesian Polri (Police) uniform with rank insignia. Place them in front of a clean professional setting (Indonesian government building or clean blue background). Pose: confident, hand pointing forward or open palm gesture, persuasive expression. Bright clean lighting, sharp photorealistic poster quality. Vertical portrait.`,
     };
 
-    const sceneDesc = sceneDescriptions[poseStyle] || sceneDescriptions.humanis;
-    const bgPrompt = `Create a vertical portrait background image (NO people, NO text, NO faces). 
-Scene: ${sceneDesc}. 
-Theme context: ${tema || "Indonesian police community service"}.
-Style: Cinematic, dramatic lighting, high quality, photorealistic, suitable as poster background.
-The image must have NO humans, NO officers, NO text - ONLY scenic/atmospheric background.`;
+    const editPrompt = `${editStyleMap[poseStyle] || editStyleMap.humanis}
 
-    const imageResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+Context — the poster will say: "${headerText}". Pose and expression should match this message about "${tema}".
+${profileJabatan ? `The person's rank is ${profileJabatan}.` : ""}
+IMPORTANT: Preserve the person's exact facial identity. Only change clothing, pose, lighting, and background. Do NOT add any text or letters in the image.`;
+
+    const editResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash-image",
-        messages: [{ role: "user", content: bgPrompt }],
+        messages: [{
+          role: "user",
+          content: [
+            { type: "text", text: editPrompt },
+            { type: "image_url", image_url: { url: profilePhoto } },
+          ],
+        }],
         modalities: ["image", "text"],
       }),
     });
 
-    let imageUrl = null;
+    let editedPhotoUrl: string | null = null;
 
-    if (imageResponse.ok) {
-      const imgData = await imageResponse.json();
-      imageUrl = imgData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    if (editResponse.ok) {
+      const editData = await editResponse.json();
+      editedPhotoUrl = editData.choices?.[0]?.message?.images?.[0]?.image_url?.url || null;
+      console.log("Edited photo generated:", !!editedPhotoUrl);
     } else {
-      if (imageResponse.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+      const errText = await editResponse.text();
+      console.error("Image edit failed:", editResponse.status, errText);
+      if (editResponse.status === 429) {
+        return new Response(JSON.stringify({ error: "Terlalu banyak request. Coba lagi sebentar." }), {
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      if (imageResponse.status === 402) {
-        return new Response(JSON.stringify({ error: "Credits exhausted. Please add funds." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+      if (editResponse.status === 402) {
+        return new Response(JSON.stringify({ error: "Kredit AI habis. Tambah kredit di workspace." }), {
+          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      console.error("Image generation failed:", imageResponse.status);
     }
 
-    return new Response(JSON.stringify({ 
-      imageUrl, 
-      headerText, 
-      pesanUtama, 
-      pesanTambahan 
+    return new Response(JSON.stringify({
+      editedPhotoUrl,
+      headerText,
+      pesanUtama,
+      pesanTambahan,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
