@@ -36,15 +36,26 @@ const Index = () => {
       toast.error("Masukkan tema konten terlebih dahulu!");
       return;
     }
+    if (!profile.photo) {
+      toast.error("Upload foto profil terlebih dahulu!");
+      return;
+    }
 
     setIsLoadingAI(true);
     setGenerated(false);
-    setAiBackground(null);
+    setEditedPhoto(null);
     setAiText({ headerText: "", pesanUtama: "", pesanTambahan: "" });
 
     try {
       const { data, error } = await supabase.functions.invoke("generate-poster", {
-        body: { poseStyle: content.poseStyle, tema: content.tema },
+        body: {
+          poseStyle: content.poseStyle,
+          tema: content.tema,
+          profilePhoto: profile.photo,
+          profileName: profile.name,
+          profileJabatan: profile.jabatan,
+          profileUnit: profile.unit,
+        },
       });
 
       if (error) {
@@ -54,15 +65,15 @@ const Index = () => {
         console.error("AI error:", data.error);
         toast.error(data.error);
       } else {
-        if (data?.imageUrl) {
-          setAiBackground(data.imageUrl);
+        if (data?.editedPhotoUrl) {
+          setEditedPhoto(data.editedPhotoUrl);
         }
         setAiText({
           headerText: data?.headerText || "POLRI HADIR UNTUK ANDA",
           pesanUtama: data?.pesanUtama || "",
           pesanTambahan: data?.pesanTambahan || "",
         });
-        toast.success("Konten AI berhasil di-generate! 🎨");
+        toast.success("Foto & teks berhasil di-generate AI! 🎨");
       }
     } catch (err) {
       console.error("Generate error:", err);
