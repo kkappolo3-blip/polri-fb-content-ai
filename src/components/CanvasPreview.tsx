@@ -50,8 +50,13 @@ const CanvasPreview = ({
 
     ctx.clearRect(0, 0, W, H);
 
-    // === BACKGROUND ===
-    if (bgImg) {
+    // === AI POSTER as FULL background (orang + scene sudah menyatu dari AI) ===
+    if (profileImg) {
+      const scale = Math.max(W / profileImg.width, H / profileImg.height);
+      const bw = profileImg.width * scale;
+      const bh = profileImg.height * scale;
+      ctx.drawImage(profileImg, (W - bw) / 2, (H - bh) / 2, bw, bh);
+    } else if (bgImg) {
       const scale = Math.max(W / bgImg.width, H / bgImg.height);
       const bw = bgImg.width * scale;
       const bh = bgImg.height * scale;
@@ -65,35 +70,17 @@ const CanvasPreview = ({
       ctx.fillRect(0, 0, W, H);
     }
 
-    // === PROFILE PHOTO (large, right side, like references) ===
-    if (profileImg) {
-      // Draw photo on right side, from middle to bottom
-      const photoW = W * 0.65;
-      const photoH = H * 0.75;
-      const photoX = W - photoW + 40;
-      const photoY = H - photoH;
-
-      // Save and create clipping for smooth edges
-      ctx.save();
-      ctx.drawImage(profileImg, photoX, photoY, photoW, photoH);
-      ctx.restore();
-
-      // Gradient overlay from left to blend text area
-      const leftBlend = ctx.createLinearGradient(0, 0, W * 0.55, 0);
-      leftBlend.addColorStop(0, "rgba(0,0,0,0.85)");
-      leftBlend.addColorStop(0.6, "rgba(0,0,0,0.6)");
-      leftBlend.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = leftBlend;
-      ctx.fillRect(0, 0, W, H);
-    } else {
-      // Full dark overlay when no photo
-      ctx.fillStyle = "rgba(0,0,0,0.5)";
-      ctx.fillRect(0, 0, W, H);
-    }
+    // Subtle left-side darken for text legibility (poster sudah ada gradasi dari AI)
+    const leftBlend = ctx.createLinearGradient(0, 0, W * 0.6, 0);
+    leftBlend.addColorStop(0, "rgba(0,0,0,0.45)");
+    leftBlend.addColorStop(0.7, "rgba(0,0,0,0.15)");
+    leftBlend.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = leftBlend;
+    ctx.fillRect(0, 0, W, H);
 
     // Top gradient for header readability
     const topGrad = ctx.createLinearGradient(0, 0, 0, 350);
-    topGrad.addColorStop(0, "rgba(0,0,0,0.8)");
+    topGrad.addColorStop(0, "rgba(0,0,0,0.65)");
     topGrad.addColorStop(1, "rgba(0,0,0,0)");
     ctx.fillStyle = topGrad;
     ctx.fillRect(0, 0, W, 350);
