@@ -93,38 +93,49 @@ const CanvasPreview = ({
     ctx.fillStyle = botGrad;
     ctx.fillRect(0, H - 350, W, 350);
 
-    // === HEADER TEXT (top, centered, full width — di ATAS subjek) ===
+    // === HEADER TEXT (top, centered — di ATAS subjek, area aman besar) ===
+    // Header dibatasi MAX 2 baris dengan font lebih kecil agar tidak menabrak wajah
     if (headerText) {
       ctx.textAlign = "center";
-      ctx.font = "900 72px 'Arial Black', Impact, sans-serif";
-      ctx.shadowColor = "rgba(0,0,0,0.85)";
-      ctx.shadowBlur = 12;
+      ctx.font = "900 60px 'Arial Black', Impact, sans-serif";
+      ctx.shadowColor = "rgba(0,0,0,0.9)";
+      ctx.shadowBlur = 14;
       ctx.shadowOffsetX = 2;
       ctx.shadowOffsetY = 3;
 
-      const maxW = W * 0.88;
-      const headerLines = wrapText(ctx, headerText.toUpperCase(), maxW, 80);
-      const startY = 130;
+      const maxW = W * 0.9;
+      let headerLines = wrapText(ctx, headerText.toUpperCase(), maxW, 68);
+      // Batasi maksimal 2 baris — sisanya dipotong dengan "…"
+      if (headerLines.length > 2) {
+        headerLines = [headerLines[0], headerLines.slice(1).join(" ")];
+        // Truncate baris ke-2 jika terlalu panjang
+        while (ctx.measureText(headerLines[1]).width > maxW && headerLines[1].length > 0) {
+          headerLines[1] = headerLines[1].slice(0, -2) + "…";
+        }
+      }
+      const startY = 90;
       headerLines.forEach((line, i) => {
         ctx.fillStyle = i === headerLines.length - 1 && headerLines.length > 1 ? "#f5c518" : "#ffffff";
-        ctx.fillText(line, W / 2, startY + i * 80);
+        ctx.fillText(line, W / 2, startY + i * 68);
       });
       ctx.shadowBlur = 0;
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 0;
     }
 
-    // === PESAN UTAMA (kiri-tengah, kecil, italic — seperti quote) ===
+    // Hitung tinggi header aktual (max 2 baris @ 68px)
+    const headerHeight = headerText ? Math.min(2, wrapText(ctx, headerText.toUpperCase(), W * 0.9, 68).length) * 68 : 0;
+
+    // === PESAN UTAMA (kiri, kecil, italic — di area aman kiri) ===
     if (pesanUtama) {
       ctx.textAlign = "left";
       ctx.font = "italic 22px Arial, sans-serif";
       ctx.shadowColor = "rgba(0,0,0,0.9)";
       ctx.shadowBlur = 6;
 
-      const headerOffset = headerText ? wrapText(ctx, headerText.toUpperCase(), W * 0.88, 80).length * 80 : 0;
       const maxW = W * 0.42;
       const msgLines = wrapText(ctx, `"${pesanUtama}"`, maxW, 30);
-      const startY = 130 + headerOffset + 40;
+      const startY = 90 + headerHeight + 40;
       msgLines.forEach((line, i) => {
         ctx.fillStyle = "#f0f0f0";
         ctx.fillText(line, 50, startY + i * 30);
@@ -143,9 +154,8 @@ const CanvasPreview = ({
 
       const maxW = W * 0.45;
       const lines = wrapText(ctx, pesanTambahan, maxW, 34);
-      const headerOffset = headerText ? wrapText(ctx, headerText.toUpperCase(), W * 0.88, 80).length * 80 : 0;
       const pesanOffset = pesanUtama ? wrapText(ctx, `"${pesanUtama}"`, W * 0.42, 30).length * 30 + 30 : 0;
-      const startY = 130 + headerOffset + 40 + pesanOffset + 20;
+      const startY = 90 + headerHeight + 40 + pesanOffset + 20;
       lines.forEach((line, i) => {
         ctx.fillText(line, 50, startY + i * 34);
       });
