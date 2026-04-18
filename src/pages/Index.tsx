@@ -108,7 +108,7 @@ const Index = () => {
         {/* Right: Preview */}
         <div className="lg:col-span-5">
           <CanvasPreview
-            profilePhoto={profile.photo}
+            profilePhoto={editedPhoto || profile.photo}
             profileName={profile.name}
             profileJabatan={profile.jabatan}
             profileUnit={profile.unit}
@@ -117,7 +117,7 @@ const Index = () => {
             pesanTambahan={aiText.pesanTambahan}
             poseStyle={content.poseStyle}
             generated={generated}
-            aiBackground={aiBackground}
+            aiBackground={null}
             isLoadingAI={isLoadingAI}
           />
         </div>
