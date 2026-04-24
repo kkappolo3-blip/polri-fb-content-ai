@@ -99,7 +99,7 @@ Hasil akhir: satu poster fotografis sinematik realistis kualitas profesional, co
       method: "POST",
       headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash-image",
+        model: "google/gemini-3.1-flash-image-preview",
         messages: [{
           role: "user",
           content: [
