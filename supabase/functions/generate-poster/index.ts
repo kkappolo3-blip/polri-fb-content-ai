@@ -35,12 +35,12 @@ serve(async (req) => {
     const styleDesc = styleDescriptions[poseStyle] || styleDescriptions.humanis;
 
     const textPrompt = `Kamu kreator konten media sosial Polri. Buat teks poster Facebook gaya: ${styleDesc}. Tema: ${tema || "kepolisian"}.
-Buat HIDUP, ENERGIK, viral. Bukan duka cita.
+Buat singkat, padat, dan powerful. Maksimal 1-2 kalimat saja per bagian.
 
 Format WAJIB:
-HEADER: [judul 3-6 kata HURUF BESAR impactful]
-PESAN: [pesan utama 2-3 kalimat powerful]
-TAMBAHAN: [1 kalimat call-to-action]`;
+HEADER: [judul 2-4 kata HURUF BESAR singkat dan impactful]
+PESAN: [1-2 kalimat singkat powerful saja, bukan paragraf panjang]
+TAMBAHAN: [1 kalimat call-to-action singkat]`;
 
     const textResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
