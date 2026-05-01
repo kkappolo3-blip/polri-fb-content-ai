@@ -38,7 +38,12 @@ const Header = ({ contentCount, creditStatus }: HeaderProps) => {
       hint: "Settings → Workspace → Plans & Credits",
       cls: "bg-destructive/10 text-destructive border-destructive/40",
     },
-  }[creditStatus];
+  }[creditStatus] ?? {
+    icon: HelpCircle,
+    label: "Kredit AI: belum dicek",
+    hint: "",
+    cls: "bg-muted text-muted-foreground border-border",
+  };
 
   const Icon = creditMeta.icon;
 
