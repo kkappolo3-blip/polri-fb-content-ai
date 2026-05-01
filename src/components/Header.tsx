@@ -1,16 +1,46 @@
-import { Newspaper, Sparkles } from "lucide-react";
+import { Newspaper, Sparkles, AlertTriangle, CheckCircle2, HelpCircle, Clock } from "lucide-react";
 
 interface HeaderProps {
   contentCount: number;
+  creditStatus: "unknown" | "ok" | "rate_limited" | "exhausted";
 }
 
-const Header = ({ contentCount }: HeaderProps) => {
+const Header = ({ contentCount, creditStatus }: HeaderProps) => {
   const today = new Date().toLocaleDateString("id-ID", {
     weekday: "long",
     year: "numeric",
     month: "long",
     day: "numeric",
   });
+
+  const creditMeta = {
+    unknown: {
+      icon: HelpCircle,
+      label: "Kredit AI: belum dicek",
+      hint: "Generate sekali untuk cek status",
+      cls: "bg-muted text-muted-foreground border-border",
+    },
+    ok: {
+      icon: CheckCircle2,
+      label: "Kredit AI: tersedia",
+      hint: "Siap generate",
+      cls: "bg-green-500/10 text-green-700 border-green-500/30 dark:text-green-400",
+    },
+    rate_limited: {
+      icon: Clock,
+      label: "Rate limit tercapai",
+      hint: "Tunggu beberapa detik",
+      cls: "bg-amber-500/10 text-amber-700 border-amber-500/30 dark:text-amber-400",
+    },
+    exhausted: {
+      icon: AlertTriangle,
+      label: "Kredit AI HABIS — top up sekarang",
+      hint: "Settings → Workspace → Plans & Credits",
+      cls: "bg-destructive/10 text-destructive border-destructive/40",
+    },
+  }[creditStatus];
+
+  const Icon = creditMeta.icon;
 
   return (
     <header className="mb-6 md:mb-8">
@@ -32,10 +62,16 @@ const Header = ({ contentCount }: HeaderProps) => {
         <div className="newspaper-divider mt-3" />
       </div>
 
-      <div className="flex justify-center mt-3">
+      <div className="flex flex-col sm:flex-row justify-center items-center gap-3 mt-3">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Sparkles className="w-4 h-4 text-accent" />
           <span>Konten dibuat: <strong className="text-foreground">{contentCount}</strong></span>
+        </div>
+
+        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-medium ${creditMeta.cls}`}>
+          <Icon className="w-3.5 h-3.5" />
+          <span>{creditMeta.label}</span>
+          <span className="opacity-70 hidden sm:inline">· {creditMeta.hint}</span>
         </div>
       </div>
     </header>

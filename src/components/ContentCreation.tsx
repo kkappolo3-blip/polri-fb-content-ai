@@ -8,9 +8,16 @@ const POSE_STYLES = [
   { id: "himbauan", emoji: "💡", label: "Himbauan", desc: "Edukatif & Persuasif" },
 ];
 
+export const IMAGE_MODELS = [
+  { id: "google/gemini-3.1-flash-image-preview", label: "Nano Banana 2", desc: "Cepat + kualitas pro (rekomendasi)", cost: "Sedang" },
+  { id: "google/gemini-2.5-flash-image", label: "Nano Banana", desc: "Paling cepat & paling murah", cost: "Murah" },
+  { id: "google/gemini-3-pro-image-preview", label: "Gemini 3 Pro Image", desc: "Kualitas tertinggi, lebih lambat", cost: "Mahal" },
+] as const;
+
 export interface ContentData {
   tema: string;
   poseStyle: string;
+  imageModel: string;
 }
 
 interface ContentCreationProps {
@@ -21,7 +28,7 @@ interface ContentCreationProps {
 }
 
 const ContentCreation = ({ content, onContentChange, onGenerate, isGenerating }: ContentCreationProps) => {
-  const set = (key: keyof ContentData, val: string) => onContentChange({ ...content, [key]: val });
+  const set = <K extends keyof ContentData>(key: K, val: ContentData[K]) => onContentChange({ ...content, [key]: val });
 
   const inputClass =
     "w-full px-4 py-2.5 rounded-lg bg-background border border-border text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all";
@@ -40,6 +47,22 @@ const ContentCreation = ({ content, onContentChange, onGenerate, isGenerating }:
           value={content.tema} onChange={(e) => set("tema", e.target.value)}
           className={inputClass} />
         <p className="text-xs text-muted-foreground italic">AI akan membuat teks konten berdasarkan tema ini</p>
+      </div>
+
+      {/* Model AI */}
+      <div className="space-y-2">
+        <label className="text-sm font-semibold text-foreground block">🧠 Model AI Gambar</label>
+        <select
+          value={content.imageModel}
+          onChange={(e) => set("imageModel", e.target.value)}
+          className={inputClass}
+        >
+          {IMAGE_MODELS.map((m) => (
+            <option key={m.id} value={m.id}>
+              {m.label} — {m.desc} ({m.cost})
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Gaya */}

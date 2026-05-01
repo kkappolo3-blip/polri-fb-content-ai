@@ -5,13 +5,19 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const ALLOWED_IMAGE_MODELS = new Set([
+  "google/gemini-2.5-flash-image",          // Nano Banana (cepat & murah)
+  "google/gemini-3.1-flash-image-preview",  // Nano Banana 2 (cepat + kualitas pro)
+  "google/gemini-3-pro-image-preview",      // Pro (kualitas terbaik, lambat)
+]);
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { poseStyle, tema, profilePhoto, profileName, profileJabatan, profileUnit } = await req.json();
+    const { poseStyle, tema, profilePhoto, profileName, profileJabatan, profileUnit, imageModel } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -24,6 +30,10 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    const selectedImageModel = ALLOWED_IMAGE_MODELS.has(imageModel)
+      ? imageModel
+      : "google/gemini-3.1-flash-image-preview";
 
     // === STEP 1: Generate text content ===
     const styleDescriptions: Record<string, string> = {
@@ -64,7 +74,7 @@ TAMBAHAN: [1 kalimat call-to-action singkat]`;
       pesanTambahan = rawText.match(/TAMBAHAN:\s*(.+)/i)?.[1]?.trim() || pesanTambahan;
     }
 
-    // === STEP 2: AI EDIT user photo - keep face/uniform/name tag, ONLY change pose + background ===
+    // === STEP 2: AI EDIT user photo ===
     const poseAndSceneMap: Record<string, string> = {
       melarang: `Pose: berdiri tegas dan berwibawa, tangan menunjuk ke depan atau bersedekap, ekspresi serius dan tegas seperti memberi peringatan. Background: suasana malam dramatis dengan lampu polisi merah-biru samar di kejauhan, jalan kota Indonesia, pencahayaan sinematik moody.`,
       humanis: `Pose: berdiri ramah dengan senyum hangat, tangan terbuka mengundang atau di dada, ekspresi penuh empati dan bersahabat. Background: suasana desa/kampung Indonesia yang hangat saat golden hour, cahaya matahari sore lembut, suasana komunitas yang damai.`,
@@ -83,12 +93,12 @@ ATURAN MUTLAK — JANGAN DILANGGAR:
 - JANGAN render teks/huruf/tulisan/logo apapun di dalam gambar (teks akan ditambahkan terpisah di atas).
 
 KOMPOSISI POSTER (PENTING — agar teks tidak menabrak wajah):
-- Orang ditempatkan di BAGIAN BAWAH poster. Ujung atas KEPALA orang harus berada sekitar 50-55% dari atas poster (artinya seluruh kepala dan wajah berada di SEPARUH BAWAH poster). Jangan letakkan kepala di area atas.
+- Orang ditempatkan di BAGIAN BAWAH poster. Ujung atas KEPALA orang harus berada sekitar 50-55% dari atas poster.
 - Crop dari dada/pinggang ke atas kepala. Bahu mengisi lebar tengah.
-- SELURUH separuh ATAS poster (50% atas) HARUS berupa background/scene SAJA tanpa orang — area kosong yang gelap halus, untuk ruang teks header besar (jangan tulis teksnya).
-- Sisi KIRI di sekitar dada/bahu ada area gelap halus untuk quote kecil (jangan tulis teksnya).
-- Bagian PALING BAWAH ada gradasi gelap untuk nama (jangan tulis namanya).
-- Pencahayaan WAJAH dan TUBUH konsisten dengan BACKGROUND (arah cahaya, warna, bayangan sama) — gunakan rim light, ambient occlusion, color grading menyeluruh. Tepi tubuh menyatu lembut dengan background.
+- SELURUH separuh ATAS poster (50% atas) HARUS berupa background/scene SAJA tanpa orang.
+- Sisi KIRI di sekitar dada/bahu ada area gelap halus untuk quote kecil.
+- Bagian PALING BAWAH ada gradasi gelap untuk nama.
+- Pencahayaan WAJAH dan TUBUH konsisten dengan BACKGROUND.
 
 POSE & BACKGROUND (sesuai tema "${tema}", gaya ${poseStyle}):
 ${poseAndSceneMap[poseStyle] || poseAndSceneMap.humanis}
@@ -99,7 +109,7 @@ Hasil akhir: satu poster fotografis sinematik realistis kualitas profesional, co
       method: "POST",
       headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-3.1-flash-image-preview",
+        model: selectedImageModel,
         messages: [{
           role: "user",
           content: [
@@ -116,17 +126,17 @@ Hasil akhir: satu poster fotografis sinematik realistis kualitas profesional, co
     if (editResponse.ok) {
       const editData = await editResponse.json();
       editedPhotoUrl = editData.choices?.[0]?.message?.images?.[0]?.image_url?.url || null;
-      console.log("Edited photo generated:", !!editedPhotoUrl);
+      console.log("Edited photo generated:", !!editedPhotoUrl, "model:", selectedImageModel);
     } else {
       const errText = await editResponse.text();
       console.error("Image edit failed:", editResponse.status, errText);
       if (editResponse.status === 429) {
-        return new Response(JSON.stringify({ error: "Terlalu banyak request. Coba lagi sebentar." }), {
+        return new Response(JSON.stringify({ error: "Terlalu banyak request. Coba lagi sebentar.", creditStatus: "rate_limited" }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (editResponse.status === 402) {
-        return new Response(JSON.stringify({ error: "Kredit AI habis. Tambah kredit di workspace." }), {
+        return new Response(JSON.stringify({ error: "Kredit AI habis. Tambah kredit di workspace.", creditStatus: "exhausted" }), {
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
@@ -137,6 +147,8 @@ Hasil akhir: satu poster fotografis sinematik realistis kualitas profesional, co
       headerText,
       pesanUtama,
       pesanTambahan,
+      modelUsed: selectedImageModel,
+      creditStatus: "ok",
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
