@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -34,6 +35,23 @@ serve(async (req) => {
     const selectedImageModel = ALLOWED_IMAGE_MODELS.has(imageModel)
       ? imageModel
       : "google/gemini-3.1-flash-image-preview";
+
+    // Setup logger (best-effort, never blocks response)
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const logger = supabaseUrl && serviceKey ? createClient(supabaseUrl, serviceKey) : null;
+    const logUsage = async (status: string) => {
+      if (!logger) return;
+      try {
+        await logger.from("ai_usage_log").insert({
+          model: selectedImageModel,
+          status,
+          prompt_preview: (tema || "").slice(0, 50),
+        });
+      } catch (e) {
+        console.error("Failed to log usage:", e);
+      }
+    };
 
     // === STEP 1: Generate text content ===
     const styleDescriptions: Record<string, string> = {
@@ -131,15 +149,20 @@ Hasil akhir: satu poster fotografis sinematik realistis kualitas profesional, co
       const errText = await editResponse.text();
       console.error("Image edit failed:", editResponse.status, errText);
       if (editResponse.status === 429) {
+        await logUsage("rate_limited");
         return new Response(JSON.stringify({ error: "Terlalu banyak request. Coba lagi sebentar.", creditStatus: "rate_limited" }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (editResponse.status === 402) {
+        await logUsage("exhausted");
         return new Response(JSON.stringify({ error: "Kredit AI habis. Tambah kredit di workspace.", creditStatus: "exhausted" }), {
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+      await logUsage("error");
+    } else {
+      await logUsage("success");
     }
 
     return new Response(JSON.stringify({
