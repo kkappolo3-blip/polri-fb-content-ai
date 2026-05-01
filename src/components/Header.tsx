@@ -1,4 +1,5 @@
-import { Newspaper, Sparkles, AlertTriangle, CheckCircle2, HelpCircle, Clock } from "lucide-react";
+import { Newspaper, Sparkles, AlertTriangle, CheckCircle2, HelpCircle, Clock, History as HistoryIcon } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface HeaderProps {
   contentCount: number;
@@ -78,6 +79,14 @@ const Header = ({ contentCount, creditStatus }: HeaderProps) => {
           <span>{creditMeta.label}</span>
           <span className="opacity-70 hidden sm:inline">· {creditMeta.hint}</span>
         </div>
+
+        <Link
+          to="/history"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border text-xs font-medium hover:bg-muted transition"
+        >
+          <HistoryIcon className="w-3.5 h-3.5" />
+          Riwayat AI
+        </Link>
       </div>
     </header>
   );
